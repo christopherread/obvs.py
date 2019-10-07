@@ -49,3 +49,36 @@ class ServiceBus(ServiceBusClient, typing.ServiceBus):
 
     def __can_handle(self, message) -> [typing.ServiceEndpoint]:
         return list(filter(lambda ep: ep.can_handle(message), self.__endpoints))
+
+    @staticmethod
+    def configure():
+        return Configurator()
+
+
+class Configurator:
+    __endpoints: [typing.ServiceEndpoint]
+    __endpoint_clients: [typing.ServiceEndpointClient]
+    __request_correlator: typing.RequestCorrelator
+
+    def __init__(self):
+        self.__endpoints = []
+        self.__endpoint_clients = []
+        self.__request_correlator = None
+
+    def with_endpoint(self, endpoint: typing.ServiceEndpoint):
+        self.__endpoints.append(endpoint)
+        return self
+
+    def with_endpoint_client(self, endpoint: typing.ServiceEndpointClient):
+        self.__endpoint_clients.append(endpoint)
+        return self
+
+    def correlate_requests_with(self, correlator: typing.RequestCorrelator):
+        self.__request_correlator = correlator
+        return self
+
+    def create(self):
+        return ServiceBus(self.__endpoints, self.__endpoint_clients, self.__request_correlator)
+
+    def create_client(self):
+        return ServiceBusClient(self.__endpoint_clients, self.__request_correlator)

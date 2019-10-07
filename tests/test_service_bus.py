@@ -14,7 +14,10 @@ class TestServiceBus(aiounittest.AsyncTestCase):
     async def test_publish_events(self):
         ep1 = FakeServiceEndpoint(type(FakeMessageOne()))
         ep2 = FakeServiceEndpoint(type(FakeMessageTwo()))
-        sb = ServiceBus([ep1, ep2], [])
+        sb = ServiceBus.configure()\
+            .with_endpoint(ep1)\
+            .with_endpoint(ep2)\
+            .create()
         received = []
         ep1.events.subscribe(lambda msg: received.append(msg))
         ep2.events.subscribe(lambda msg: received.append(msg))
@@ -29,14 +32,17 @@ class TestServiceBus(aiounittest.AsyncTestCase):
     async def test_receive_command(self):
         ep1 = FakeServiceEndpoint(type(FakeMessageOne('')))
         ep2 = FakeServiceEndpoint(type(FakeMessageTwo('')))
-        sb = ServiceBus([ep1, ep2])
+        sb = ServiceBus.configure() \
+            .with_endpoint(ep1) \
+            .with_endpoint(ep2) \
+            .create()
         received = []
         sb.commands.subscribe(lambda msg: received.append(msg))
 
         cmd1 = FakeMessageOne('command1')
         cmd2 = FakeMessageOne('command2')
-        await ep1.send(cmd1)
-        await ep2.send(cmd2)
+        ep1.commands_subject.on_next(cmd1)
+        ep2.commands_subject.on_next(cmd2)
         self.assertIn(cmd1, received, 'command1 was not received')
         self.assertIn(cmd2, received, 'command2 was not received')
         self.assertEqual(len(received), 2, 'messages received')
@@ -44,7 +50,10 @@ class TestServiceBus(aiounittest.AsyncTestCase):
     async def test_reply_to_request(self):
         ep1 = FakeServiceEndpoint(type(FakeMessageOne('')))
         ep2 = FakeServiceEndpoint(type(FakeMessageTwo('')))
-        sb = ServiceBus([ep1, ep2])
+        sb = ServiceBus.configure() \
+            .with_endpoint(ep1) \
+            .with_endpoint(ep2) \
+            .create()
 
         received = []
         ep1.responses_subject.subscribe(lambda msg: received.append(msg))

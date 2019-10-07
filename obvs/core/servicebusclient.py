@@ -19,7 +19,7 @@ class ServiceBusClient(typing.ServiceBusClient):
 
     def get_responses(self, request) -> rx.Observable:
         if self._request_correlator is None:
-            raise Exception('Please configure the ServiceBus with a RequestCorrelator using the fluent configuration extension method .CorrelatesRequestWith()')
+            raise Exception('Please configure the ServiceBus with a RequestCorrelator using .correlate_requests_with()')
 
         self._request_correlator.set_request_correlation_ids(request)
 
@@ -38,14 +38,18 @@ class ServiceBusClient(typing.ServiceBusClient):
 
     def __init__(self,
                  endpoint_clients: [typing.ServiceEndpointClient] = None,
-                 request_correlator: typing.RequestCorrelator = DefaultRequestCorrelator()):
+                 request_correlator: typing.RequestCorrelator = None):
 
         if endpoint_clients is None:
             self.__endpoint_clients = []
         else:
             self.__endpoint_clients = endpoint_clients
 
-        self._request_correlator = request_correlator
+        if request_correlator is None:
+            self._request_correlator = DefaultRequestCorrelator()
+        else:
+            self._request_correlator = request_correlator
+
         self.__events = rx.from_iterable(map(lambda ep: ep.events, self.__endpoint_clients)).pipe(merge_all(), share())
 
     def __can_handle(self, message) -> [typing.ServiceEndpointClient]:
