@@ -20,6 +20,22 @@ class FakeCommandOne(FakeMessageOne):
         super().__init__(data)
 
 
+class FakeRequestOne(FakeMessageOne):
+    request_id: str = ''
+    requester_id: str = ''
+
+    def __init__(self, data: str):
+        super().__init__(data)
+
+
+class FakeResponseOne(FakeMessageOne):
+    request_id: str = ''
+    requester_id: str = ''
+
+    def __init__(self, data: str):
+        super().__init__(data)
+
+
 class FakeServiceTwo(abc.ABC):
     pass
 
@@ -30,14 +46,20 @@ class FakeServiceEndpoint(ServiceEndpoint, ServiceEndpointClient):
         return self.events_subject
 
     async def send(self, command):
-        print(self.name, 'send', command)
+        print(self.name, 'send', command.data)
         self.commands_subject.on_next(command)
 
     def get_responses(self, request) -> rx.Observable:
-        print(self.name, 'get_responses', request)
-        return self.responses_subject.pipe(
-            rx.operators.filter(lambda r: r.request_id == request.request_id),
-            share())
+        print(self.name, 'get_responses', request.data)
+
+        # Very important - subscribe() signature needs scheduler arg to be valid
+        def subscribe(o, s) -> rx.typing.Disposable:
+            print(self.name, 'get_responses subscribe', request.data)
+            disposable = self.responses_subject.subscribe(o)
+            self.requests_subject.on_next(request)
+            return disposable
+
+        return rx.create(subscribe)
 
     @property
     def requests(self) -> rx.Observable:
@@ -48,11 +70,11 @@ class FakeServiceEndpoint(ServiceEndpoint, ServiceEndpointClient):
         return self.commands_subject
 
     async def publish(self, ev):
-        print(self.name, 'publish', ev)
+        print(self.name, 'publish', ev.data)
         self.events_subject.on_next(ev)
 
     async def reply(self, request, response):
-        print(self.name, 'reply', request, response)
+        print(self.name, 'reply', request.data, response.data)
         self.responses_subject.on_next(response)
 
     def can_handle(self, message) -> bool:

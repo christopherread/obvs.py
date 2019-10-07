@@ -23,9 +23,10 @@ class ServiceBusClient(typing.ServiceBusClient):
         self.request_correlator.set_request_correlation_ids(request)
 
         endpoints = self.__endpoints_that_can_handle(request)
-        all_responses = rx.from_iterable(map(lambda ep: ep.get_responses(request), endpoints))
 
-        return all_responses.pipe(
+        responses = rx.from_iterable(map(lambda ep: ep.get_responses(request), endpoints))
+
+        return responses.pipe(
             merge_all(),
             rx.operators.filter(lambda r: self.request_correlator.are_correlated(request, r)),
             share())
