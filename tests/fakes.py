@@ -6,17 +6,10 @@ from obvs.core.typing import ServiceEndpoint, ServiceEndpointClient
 
 
 class FakeMessageOne:
-    @property
-    def data(self) -> str:
-        return self._data
+    data: str
 
     def __init__(self, data: str = ''):
-        self._data = data
-
-
-class FakeCommandOne(FakeMessageOne):
-    def __init__(self, data: str):
-        super().__init__(data)
+        self.data = data
 
 
 class FakeRequestOne(FakeMessageOne):
@@ -36,17 +29,8 @@ class FakeResponseOne(FakeMessageOne):
 
 
 class FakeMessageTwo(abc.ABC):
-    @property
-    def data(self) -> str:
-        return self._data
-
     def __init__(self, data: str = ''):
-        self._data = data
-
-
-class FakeCommandTwo(FakeMessageTwo):
-    def __init__(self, data: str):
-        super().__init__(data)
+        self.data = data
 
 
 class FakeRequestTwo(FakeMessageTwo):
