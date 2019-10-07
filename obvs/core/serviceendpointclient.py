@@ -44,8 +44,8 @@ class ServiceEndpointClient(typing.ServiceEndpointClient, Disposable):
         return self.command_publisher.publish(ev)
 
     async def get_responses(self, request) -> rx.Observable:
-        def subscribe(o) -> rx.typing.Disposable:
-            disposable = self.response_source.messages.subscribe(o)
+        def subscribe(o, s) -> rx.typing.Disposable:
+            disposable = self.response_source.messages.subscribe(o, s)
             self.request_publisher.publish(request)
             return disposable
         return rx.create(subscribe)

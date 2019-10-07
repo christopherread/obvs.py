@@ -1,6 +1,5 @@
 import abc
 import rx
-from rx.operators import share
 from rx.subject import Subject
 
 from obvs.core.typing import ServiceEndpoint, ServiceEndpointClient
@@ -11,7 +10,7 @@ class FakeMessageOne:
     def data(self) -> str:
         return self._data
 
-    def __init__(self, data: str):
+    def __init__(self, data: str = ''):
         self._data = data
 
 
@@ -36,8 +35,34 @@ class FakeResponseOne(FakeMessageOne):
         super().__init__(data)
 
 
-class FakeServiceTwo(abc.ABC):
-    pass
+class FakeMessageTwo(abc.ABC):
+    @property
+    def data(self) -> str:
+        return self._data
+
+    def __init__(self, data: str = ''):
+        self._data = data
+
+
+class FakeCommandTwo(FakeMessageTwo):
+    def __init__(self, data: str):
+        super().__init__(data)
+
+
+class FakeRequestTwo(FakeMessageTwo):
+    request_id: str = ''
+    requester_id: str = ''
+
+    def __init__(self, data: str):
+        super().__init__(data)
+
+
+class FakeResponseTwo(FakeMessageTwo):
+    request_id: str = ''
+    requester_id: str = ''
+
+    def __init__(self, data: str):
+        super().__init__(data)
 
 
 class FakeServiceEndpoint(ServiceEndpoint, ServiceEndpointClient):
@@ -52,10 +77,9 @@ class FakeServiceEndpoint(ServiceEndpoint, ServiceEndpointClient):
     def get_responses(self, request) -> rx.Observable:
         print(self.name, 'get_responses', request.data)
 
-        # Very important - subscribe() signature needs scheduler arg to be valid
         def subscribe(o, s) -> rx.typing.Disposable:
             print(self.name, 'get_responses subscribe', request.data)
-            disposable = self.responses_subject.subscribe(o)
+            disposable = self.responses_subject.subscribe(o, s)
             self.requests_subject.on_next(request)
             return disposable
 

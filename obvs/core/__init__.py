@@ -1,5 +1,6 @@
+from .defaultrequestcorrelator import DefaultRequestCorrelator
 from .subjectmessagebus import SubjectMessageBus
 from .serviceendpoint import ServiceEndpoint
 from .serviceendpointclient import ServiceEndpointClient
 from .servicebusclient import ServiceBusClient
-from .defaultrequestcorrelator import DefaultRequestCorrelator
+from .servicebus import ServiceBus
